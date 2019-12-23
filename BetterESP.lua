@@ -6,7 +6,7 @@
 
 --- Auto updater Variables
 local SCRIPT_FILE_NAME = GetScriptName();
-local SCRIPT_FILE_ADDR = "https://raw.githubusercontent.com/superyor/betteresp/master/betteresp.lua";
+local SCRIPT_FILE_ADDR = "https://raw.githubusercontent.com/superyor/betteresp/master/BetterESP.lua";
 local VERSION_FILE_ADDR = "https://raw.githubusercontent.com/superyor/betteresp/master/version.txt"; --- in case of update i need to update this. (Note by superyu'#7167 "so i don't forget it.")
 local VERSION_NUMBER = "1.0.0"; --- This too
 local version_check_done = false;
@@ -611,6 +611,8 @@ local function drawESPHook(builder)
 end
 
 local function drawHook()
+
+    handleUpdates()
 
     pLocal = entities.GetLocalPlayer()
 
