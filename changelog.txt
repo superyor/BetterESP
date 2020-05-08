@@ -1,6 +1,8 @@
-[2.0 Beta 2]
+[2.0 Beta 2 to 4]
 - Added Health option "Number".
 - Added Ammo with options "Number" and "Bar".
 - Added some colors to the GUI.
 - Fixed bug with variable names.
 - Made update button invisible when client is up to date.
+- Fixed update checker only being called on load.
+- Repositioned GUI a bit.

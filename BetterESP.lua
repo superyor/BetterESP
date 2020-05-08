@@ -80,7 +80,7 @@ local BetterESP = {
 
     metadata = {
         scriptName = GetScriptName();
-        version = "2.0 Beta 2";
+        version = "2.0 Beta 4";
         fileLink = "https://raw.githubusercontent.com/superyor/BetterESP/master/BetterESP.lua";
         versionLink = "https://raw.githubusercontent.com/superyor/BetterESP/master/version.txt";
         changelogLink = "https://raw.githubusercontent.com/superyor/BetterESP/master/changelog.txt";
@@ -120,7 +120,7 @@ BetterESP.__index = BetterESP;
 function BetterESP:createMenu()
 
     --- Autoupdater GUI Objects
-    self.gui.updatergroup = gui.Groupbox(ref, "BetterESP | Updater", 16, 16, 300-8, 600)
+    self.gui.updatergroup = gui.Groupbox(ref, "BetterESP | Updater for v" .. self.metadata.version, 16, 16, 400, 600)
     self.gui.updaterText = gui.Text(self.gui.updatergroup, "You shouldn't be able to see this...")
     self.gui.updaterButton = gui.Button(self.gui.updatergroup, "Update", function()
         if self.vars.updater.isOutdated then
@@ -132,11 +132,8 @@ function BetterESP:createMenu()
             self.gui.updaterText:SetText("Please reload the lua.");
         end
     end)
-    self.gui.updaterButton:SetWidth(300-32-8);
+    self.gui.updaterButton:SetWidth(400-32-8);
     self.gui.updaterButton:SetInvisible(true);
-
-    self.gui.changelogGroup = gui.Groupbox(ref, "BetterESP | Changelog", 16+8+300, 16, 300-8, 600)
-    self.gui.changelogText = gui.Text(self.gui.changelogGroup, "You shouldn't be able to see this...")
 
     --- Main GUI Objects
     self.gui.group = gui.Groupbox(ref, "BetterESP | v" .. self.metadata.version, 16, 128+13+16, 400, 600)
@@ -178,6 +175,9 @@ function BetterESP:createMenu()
         self.gui.options[i].flagArmor = gui.Checkbox(self.gui.options[i].flagsMulti , p .. ".flagarmor", "Show Armor", false)
         self.gui.options[i].flagScoped = gui.Checkbox(self.gui.options[i].flagsMulti , p .. ".flagscoped", "Show Scoped", false)
     end
+
+    self.gui.changelogGroup = gui.Groupbox(ref, "BetterESP | Changelog for v" .. self.metadata.version, 16, 512+64+32, 400, 600)
+    self.gui.changelogText = gui.Text(self.gui.changelogGroup, "You shouldn't be able to see this...")
 end
 
 function BetterESP:checkUpdates()
@@ -541,7 +541,6 @@ end
 function BetterESP:hkLoad() -- ok not really callback function but idc
     ref1:SetInvisible(true)
     ref2:SetInvisible(true)
-    ref3:SetPosY(128+13+16)
 
     --- The commented out ones are not working for whatever reason
     for i=1, 2 do
@@ -573,7 +572,6 @@ end
 function BetterESP:hkUnload()
     ref1:SetInvisible(false)
     ref2:SetInvisible(false)
-    ref3:SetPosY(16)
 end
 
 function BetterESP:hkDraw()
@@ -581,6 +579,7 @@ function BetterESP:hkDraw()
 
     if menuref:IsActive() then
         self:handleUI()
+        self:checkUpdates()
     end
 end
 
