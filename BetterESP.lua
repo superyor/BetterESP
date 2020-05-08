@@ -80,20 +80,20 @@ local BetterESP = {
 
     metadata = {
         scriptName = GetScriptName();
-        version = "2.0 Beta";
+        version = "2.0 Beta 2";
         fileLink = "https://raw.githubusercontent.com/superyor/BetterESP/master/BetterESP.lua";
         versionLink = "https://raw.githubusercontent.com/superyor/BetterESP/master/version.txt";
         changelogLink = "https://raw.githubusercontent.com/superyor/BetterESP/master/changelog.txt";
     };
 
-    guiObjects = {
+    gui = {
         options = {
             [1] = {}; --- Friendly
             [2] = {}; --- Enemy
         }
     };
 
-    variables = {
+    vars = {
         pLocal = nil;
 
         updater = {
@@ -108,6 +108,10 @@ local BetterESP = {
         Color:New(255, 25, 25, 255),
     };
 
+    maxAmmos = {
+        7, 30, 20, 20, 0, 0, 30, 30, 10, 25, 20, 0, 35, 100, 0, 30, 30, 18, 50, 0, 0, 0, 30, 25, 7, 64, 5, 150, 7, 18, 0, 13, 30, 30, 8, 13, 0, 20, 30, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25, 12, 0, 12, 8
+    };
+
     font = dCreateFont("Verdana", 12, 500);
 };
 BetterESP.__index = BetterESP;
@@ -116,66 +120,88 @@ BetterESP.__index = BetterESP;
 function BetterESP:createMenu()
 
     --- Autoupdater GUI Objects
-    self.guiObjects.updatergroup = gui.Groupbox(ref, "BetterESP | Updater", 16, 16, 300-8, 600)
-    self.guiObjects.updaterText = gui.Text(self.guiObjects.updatergroup, "You shouldn't be able to see this...")
-    self.guiObjects.updaterButton = gui.Button(self.guiObjects.updatergroup, "Update", function()
-        if self.variables.updater.isOutdated then
-            local nScript = http.Get(self.metadata.fileLink)
+    self.gui.updatergroup = gui.Groupbox(ref, "BetterESP | Updater", 16, 16, 300-8, 600)
+    self.gui.updaterText = gui.Text(self.gui.updatergroup, "You shouldn't be able to see this...")
+    self.gui.updaterButton = gui.Button(self.gui.updatergroup, "Update", function()
+        if self.vars.updater.isOutdated then
+            local nScript = http.Get(self.metadata.fileLink);
             local oScript = file.Open(self.metadata.scriptName, "w");
             oScript:Write(nScript);
-            oScript:Close()
-            self.variables.updater.updated = true;
-            self.guiObjects.updaterText:SetText("Please reload the lua.");
+            oScript:Close();
+            self.vars.updater.updated = true;
+            self.gui.updaterText:SetText("Please reload the lua.");
         end
     end)
-    self.guiObjects.updaterButton:SetWidth(300-32-8)
+    self.gui.updaterButton:SetWidth(300-32-8);
+    self.gui.updaterButton:SetInvisible(true);
 
-    self.guiObjects.changelogGroup = gui.Groupbox(ref, "BetterESP | Changelog", 16+8+300, 16, 300-8, 600)
-    self.guiObjects.changelogText = gui.Text(self.guiObjects.changelogGroup, "You shouldn't be able to see this...")
+    self.gui.changelogGroup = gui.Groupbox(ref, "BetterESP | Changelog", 16+8+300, 16, 300-8, 600)
+    self.gui.changelogText = gui.Text(self.gui.changelogGroup, "You shouldn't be able to see this...")
 
     --- Main GUI Objects
-    self.guiObjects.group = gui.Groupbox(ref, "BetterESP | v" .. self.metadata.version, 16, 128+13+16, 400, 600)
-    self.guiObjects.targetSelector = gui.Combobox(self.guiObjects.group, "targetselector", "Target", "Enemy", "Friendly")
+    self.gui.group = gui.Groupbox(ref, "BetterESP | v" .. self.metadata.version, 16, 128+13+16, 400, 600)
+    self.gui.targetSelector = gui.Combobox(self.gui.group, "targetselector", "Target", "Enemy", "Friendly")
 
-    self.guiObjects.drawOptions = gui.Multibox(self.guiObjects.group, "Draw Options")
-    self.guiObjects.outlined = gui.Checkbox(self.guiObjects.drawOptions, "drawoptions.outlined", "Draw Outlined", false)
-    self.guiObjects.lowercase = gui.Checkbox(self.guiObjects.drawOptions, "drawoptions.lowercase", "Force Lowercase", false)
+    self.gui.drawOptions = gui.Multibox(self.gui.group, "Draw Options")
+    self.gui.outlined = gui.Checkbox(self.gui.drawOptions, "drawoptions.outlined", "Draw Outlined", false)
+    self.gui.lowercase = gui.Checkbox(self.gui.drawOptions, "drawoptions.lowercase", "Force Lowercase", false)
+    self.gui.barlines = gui.Checkbox(self.gui.drawOptions, p .. "drawoptions.barlines", "Bar lines", false)
 
     for i=1, 2 do
-        p = i==1 and "friendly" or "enemy"
-        self.guiObjects.options[i].name = gui.Checkbox(self.guiObjects.group, p .. ".name", "Enable Name", false)
-        self.guiObjects.options[i].box = gui.Checkbox(self.guiObjects.group, p .. ".box", "Enable Box", false)
-        self.guiObjects.options[i].weapon = gui.Checkbox(self.guiObjects.group, p .. ".weapon", "Enable Weapon", false)
-        self.guiObjects.options[i].health = gui.Checkbox(self.guiObjects.group, p .. ".health", "Enable Healthbar", false)
-        self.guiObjects.options[i].healthlines = gui.Checkbox(self.guiObjects.group, p .. ".healthlines", "Healthbar lines", false)
-        self.guiObjects.options[i].healthcolor = gui.ColorPicker(self.guiObjects.options[i].health, p .. "health.color", "Color", 25, 255, 25, 255)
-        self.guiObjects.options[i].flagsMulti = gui.Multibox(self.guiObjects.group, "Flags");
-        self.guiObjects.options[i].flagArmor = gui.Checkbox(self.guiObjects.options[i].flagsMulti , p .. ".flagarmor", "Armor", false)
-        self.guiObjects.options[i].flagScoped = gui.Checkbox(self.guiObjects.options[i].flagsMulti , p .. ".flagscoped", "Scoped", false)
+        p = i==1 and "betteresp.friendly" or "betteresp.enemy"
+        --- Name
+        self.gui.options[i].name = gui.Checkbox(self.gui.group, p .. ".name", "Show Name", false)
+        self.gui.options[i].namecolor = gui.ColorPicker(self.gui.options[i].name, p .. ".name.color", "Color", 255, 255, 255, 255)
+
+        --- Box
+        self.gui.options[i].box = gui.Checkbox(self.gui.group, p .. ".box", "Show Box", false)
+        self.gui.options[i].boxcolor = gui.ColorPicker(self.gui.options[i].box, p .. ".box.color", "Color", 255, 255, 255, 255)
+
+        --- Health
+        self.gui.options[i].health = gui.Combobox(self.gui.group, p .. ".health", "Show Health", "Off", "Number", "Bar")
+        self.gui.options[i].healthcolor1 = gui.ColorPicker(self.gui.options[i].health, p .. ".health.color1", "Color", 25, 255, 25, 255)
+        self.gui.options[i].healthcolor2 = gui.ColorPicker(self.gui.options[i].health, p .. ".health.color2", "Color2", 255, 25, 25, 255)
+        self.gui.options[i].healthcolor1:SetPosX(400-64-16-8);
+
+        --- Weapon
+        self.gui.options[i].weapon = gui.Checkbox(self.gui.group, p .. ".weapon", "Show Weapon", false)
+        self.gui.options[i].weaponcolor = gui.ColorPicker(self.gui.options[i].weapon, p .. ".weapon.color", "Color", 255, 255, 255, 255)
+
+        --- Ammo
+        self.gui.options[i].ammo = gui.Combobox(self.gui.group, p .. ".ammo", "Show Ammo", "Off", "Number", "Bar")
+        self.gui.options[i].ammocolor1 = gui.ColorPicker(self.gui.options[i].ammo, p .. ".ammo.color1", "Color", 50, 125, 255, 255)
+        self.gui.options[i].ammocolor2 = gui.ColorPicker(self.gui.options[i].ammo, p .. ".ammo.color2", "Color", 255, 25, 25, 255)
+        self.gui.options[i].ammocolor1:SetPosX(400-64-16-8);
+
+        --- Flags
+        self.gui.options[i].flagsMulti = gui.Multibox(self.gui.group, "Flags");
+        self.gui.options[i].flagArmor = gui.Checkbox(self.gui.options[i].flagsMulti , p .. ".flagarmor", "Show Armor", false)
+        self.gui.options[i].flagScoped = gui.Checkbox(self.gui.options[i].flagsMulti , p .. ".flagscoped", "Show Scoped", false)
     end
 end
 
 function BetterESP:checkUpdates()
 
-    if self.variables.updater.updated == false then
+    if self.vars.updater.updated == false then
 
         local time = getRealTime()
 
-        if self.variables.updater.lastVersionCheck < time-300 then
+        if self.vars.updater.lastVersionCheck < time-300 then
 
             local onlineVersion = http.Get(self.metadata.versionLink);
 
             if self.metadata.version ~= onlineVersion then
-                self.guiObjects.updaterText:SetText("A new update is available. Newest version: " .. onlineVersion);
-                self.variables.updater.isOutdated = true;
+                self.gui.updaterText:SetText("A new update is available. Newest version: " .. onlineVersion);
+                self.vars.updater.isOutdated = true;
+                self.gui.updaterButton:SetInvisible(false);
             else
-                self.guiObjects.updaterText:SetText("Your client is up to date.");
+                self.gui.updaterText:SetText("Your client is up to date.");
             end
 
             local changelogContent = http.Get(self.metadata.changelogLink)
-            self.guiObjects.changelogText:SetText(changelogContent);
+            self.gui.changelogText:SetText(changelogContent);
 
-            self.variables.updater.lastVersionCheck = time;
+            self.vars.updater.lastVersionCheck = time;
         end
 
     end
@@ -183,20 +209,20 @@ end
 
 function BetterESP:handleUI()
 
-    local target = self.guiObjects.targetSelector:GetValue()+1
+    local target = self.gui.targetSelector:GetValue()+1
 
     for i=1, 2 do
-        self.guiObjects.options[i].name:SetInvisible(i==target)
-        self.guiObjects.options[i].box:SetInvisible(i==target)
-        self.guiObjects.options[i].weapon:SetInvisible(i==target)
-        self.guiObjects.options[i].health:SetInvisible(i==target)
-        self.guiObjects.options[i].healthlines:SetInvisible(i==target)
-        self.guiObjects.options[i].flagsMulti:SetInvisible(i==target)
+        self.gui.options[i].name:SetInvisible(i==target);
+        self.gui.options[i].box:SetInvisible(i==target);
+        self.gui.options[i].weapon:SetInvisible(i==target);
+        self.gui.options[i].health:SetInvisible(i==target);
+        self.gui.options[i].ammo:SetInvisible(i==target);
+        self.gui.options[i].flagsMulti:SetInvisible(i==target);
     end
 end
 
 function BetterESP:drawBox(rect, color)
-    if self.guiObjects.outlined:GetValue() then
+    if self.gui.outlined:GetValue() then
         dSetColor(0, 0, 0, 255);
         dRect(rect.p1.x+1, rect.p1.y+1, rect.p2.x-1, rect.p2.y-1)
         dRect(rect.p1.x-1, rect.p1.y-1, rect.p2.x+1, rect.p2.y+1)
@@ -210,21 +236,21 @@ end
 
 function BetterESP:drawName(rect, color, name)
 
-    if self.guiObjects.lowercase:GetValue() then
+    if self.gui.lowercase:GetValue() then
         name = name:lower()
     end
 
     local w, h = dGetTextSize(name);
     dSetColor(color.r, color.g, color.b, color.a);
 
-    if self.guiObjects.outlined:GetValue() then
+    if self.gui.outlined:GetValue() then
         dTextShadow((rect.p1.x+(rect.width/2))-(w/2), (rect.p1.y-(h/2)-9), name)
     else
         dText((rect.p1.x+(rect.width/2))-(w/2), (rect.p1.y-(h/2)-9), name)
     end
 end
 
-function BetterESP:drawWeaponName(rect, color, weapon)
+function BetterESP:drawWeaponName(rect, color, weapon, adjustBar)
 
     local weaponName = "";
 
@@ -245,58 +271,136 @@ function BetterESP:drawWeaponName(rect, color, weapon)
         weaponName = "Unknown Weapon"
     end
 
-    if self.guiObjects.lowercase:GetValue() then
+    if self.gui.lowercase:GetValue() then
         weaponName = weaponName:lower()
     end
 
     local w, h = dGetTextSize(weaponName);
     dSetColor(color.r, color.g, color.b, color.a);
 
-    if self.guiObjects.outlined:GetValue() then
-        dTextShadow((rect.p1.x+(rect.width/2))-(w/2), (rect.p2.y+(h/2))-2, weaponName)
+    local o = 0;
+
+    if adjustBar then
+        o = 6;
+    end
+
+    if self.gui.outlined:GetValue() then
+        dTextShadow((rect.p1.x+(rect.width/2))-(w/2), (rect.p2.y+(h/2))-2+o, weaponName)
     else
-        dText((rect.p1.x+(rect.width/2))-(w/2), (rect.p2.y+(h/2))-2, weaponName)
+        dText((rect.p1.x+(rect.width/2))-(w/2), (rect.p2.y+(h/2))-2+o, weaponName)
     end
 end
 
-function BetterESP:drawBarLeft(rect, color, percentage, lines)
+function BetterESP:drawHealth(rect, color, percentage, type)
 
     local offset = 0;
 
-    if self.guiObjects.outlined:GetValue() then
+    if self.gui.outlined:GetValue() then
         offset = 1;
     end
 
-    dSetColor(0, 0, 0, 255)
-    dRect(rect.p1.x-6-offset, rect.p1.y-offset, rect.p1.x-2-offset, rect.p2.y+offset)
+    if type == 2 then
+        dSetColor(0, 0, 0, 255)
+        dRect(rect.p1.x-6-offset, rect.p1.y-offset, rect.p1.x-2-offset, rect.p2.y+offset)
 
-    dSetColor(25, 25, 25, 255/1.33)
-    dFilledRect(rect.p1.x-5-offset, (rect.p1.y-offset+1), rect.p1.x-3-offset, rect.p2.y+offset-1)
+        dSetColor(25, 25, 25, 255/1.33)
+        dFilledRect(rect.p1.x-5-offset, (rect.p1.y-offset+1), rect.p1.x-3-offset, rect.p2.y+offset-1)
 
-    local value = (rect.p2.y+offset-1)-(rect.p1.y-offset+1) - ((((rect.p2.y+offset-1)-(rect.p1.y-offset+1))*percentage) / 100);
+        local value = (rect.p2.y+offset-1)-(rect.p1.y-offset+1) - ((((rect.p2.y+offset-1)-(rect.p1.y-offset+1))*percentage) / 100);
 
-    dSetColor(color.r, color.g, color.b, color.a)
-    dFilledRect(rect.p1.x-5-offset, (rect.p1.y-offset+1)+value, rect.p1.x-3-offset, rect.p2.y+offset-1)
+        dSetColor(color.r, color.g, color.b, color.a)
+        dFilledRect(rect.p1.x-5-offset, (rect.p1.y-offset+1)+value, rect.p1.x-3-offset, rect.p2.y+offset-1)
 
-    dSetColor(255, 255, 255, 255)
+        dSetColor(255, 255, 255, 255)
 
-    if percentage ~= 100 then
+        if percentage ~= 100 then
+            dSetColor(255, 255, 255, 255)
+            local hpString = tostring(percentage);
+            local w, h = dGetTextSize(hpString);
 
+            if self.gui.outlined:GetValue() then
+                dTextShadow(rect.p1.x-8-w-offset, (rect.p1.y-offset+1)+value-(h/2), hpString)
+            else
+                dText(rect.p1.x-8-w-offset, (rect.p1.y-offset+1)+value-(h/2), hpString)
+            end
+        end
+
+        if self.gui.barlines:GetValue() then
+            dSetColor(0, 0, 0, 255)
+            for i=0.1, 0.9, 0.1 do
+                local h = (rect.p2.y+offset)-(rect.p1.y-offset) - (((rect.p2.y+offset)-(rect.p1.y-offset))*i);
+                dFilledRect(rect.p1.x-6-offset, (rect.p1.y-offset) + h, rect.p1.x-2-offset, (rect.p1.y-offset) + h+1)
+            end
+        end
+    else
+        dSetColor(255, 255, 255, 255)
         local hpString = tostring(percentage);
         local w, h = dGetTextSize(hpString);
-
-        if self.guiObjects.outlined:GetValue() then
-            dTextShadow(rect.p1.x-8-w-offset, (rect.p1.y-offset+1)+value-(h/2), hpString)
+        if self.gui.outlined:GetValue() then
+            dTextShadow(rect.p1.x-2-w-offset, (rect.p1.y-offset)+(((rect.p2.y+offset)-(rect.p1.y-offset))/2)-(w/2.5), hpString)
         else
-            dText(rect.p1.x-8-w-offset, (rect.p1.y-offset+1)+value-(h/2), hpString)
+            dText(rect.p1.x-2-w-offset, (rect.p1.y-offset)+(((rect.p2.y+offset)-(rect.p1.y-offset))/2)-(w/2.5), hpString)
         end
     end
+end
 
-    if lines then
+function BetterESP:drawAmmo(rect, color, percentage, val, maxval, type, callId)
+
+    local offset = 0;
+
+    if self.gui.outlined:GetValue() then
+        offset = 1;
+    end
+
+    if type == 2 then
         dSetColor(0, 0, 0, 255)
-        for i=0.1, 0.9, 0.1 do
-            local h = (rect.p2.y+offset)-(rect.p1.y-offset) - (((rect.p2.y+offset)-(rect.p1.y-offset))*i);
-            dFilledRect(rect.p1.x-6-offset, (rect.p1.y-offset) + h, rect.p1.x-2-offset, (rect.p1.y-offset) + h+1)
+        dRect(rect.p2.x-rect.width-offset, rect.p2.y+5+offset, rect.p2.x+offset, rect.p2.y+3+offset)
+
+        dSetColor(25, 25, 25, 255/1.33)
+        dFilledRect(rect.p2.x-rect.width-offset+1, rect.p2.y+5+offset, rect.p2.x+offset-1, rect.p2.y+3+offset)
+
+        local wv = (rect.p2.x-rect.width-offset)-(rect.p2.x+offset)
+        local value = wv - ((wv*percentage) / 100);
+
+        dSetColor(color.r, color.g, color.b, color.a)
+        dFilledRect(rect.p2.x-rect.width-offset+1, rect.p2.y+5+offset, rect.p2.x-offset+value-1, rect.p2.y+3+offset)
+
+        dSetColor(255, 255, 255, 255)
+
+        if percentage ~= 100 then
+            dSetColor(255, 255, 255, 255)
+            local ammoString = tostring(val);
+            local w, h = dGetTextSize(ammoString);
+
+            if self.gui.outlined:GetValue() then
+                dTextShadow(rect.p2.x+(w)-2, (rect.p2.y), ammoString)
+            else
+                dText(rect.p2.x+(w)-2, (rect.p2.y), ammoString)
+            end
+        end
+
+        if self.gui.barlines:GetValue() then
+            dSetColor(0, 0, 0, 255)
+            for i=0.1, 0.9, 0.1 do
+                local h = (rect.p2.y+offset)-(rect.p1.y-offset) - (((rect.p2.y+offset)-(rect.p1.y-offset))*i);
+                local lv = wv - (wv*i);
+                dFilledRect(rect.p2.x-offset+lv-1, rect.p2.y+5+offset, rect.p2.x-offset+lv-1+1, rect.p2.y+3+offset)
+            end
+        end
+    else
+        dSetColor(255, 255, 255, 255)
+        local ammoString = tostring("(" .. val .. " / " .. maxval .. ")");
+        local w, h = dGetTextSize(ammoString);
+
+        local m = 0
+        if self.gui.options[callId].weapon:GetValue() then
+            m = 1;
+        end
+
+        if self.gui.outlined:GetValue() then
+            dTextShadow((rect.p1.x+(rect.width/2))-(w/2), (rect.p2.y+(h/2))+offset-2+(m*(h+3)), ammoString)
+        else
+            dText((rect.p1.x+(rect.width/2))-(w/2), (rect.p2.y+(h/2))+offset-2+(m*(h+3)), ammoString)
         end
     end
 end
@@ -305,7 +409,7 @@ function BetterESP:drawFlags(rect, pEntity, callId)
 
     local flags = {};
 
-    if self.guiObjects.options[callId].flagArmor:GetValue() then
+    if self.gui.options[callId].flagArmor:GetValue() then
         if pEntity:GetPropInt("m_ArmorValue") ~= 0 then
             flags[#flags+1] = "K"
         end
@@ -315,7 +419,7 @@ function BetterESP:drawFlags(rect, pEntity, callId)
         end
     end
 
-    if self.guiObjects.options[callId].flagScoped:GetValue() then
+    if self.gui.options[callId].flagScoped:GetValue() then
         if pEntity:GetPropBool("m_bIsScoped") then
             flags[#flags+1] = "SC"
         end
@@ -325,20 +429,20 @@ function BetterESP:drawFlags(rect, pEntity, callId)
     local posX = rect.p1.x+rect.width+2;
     local posY = rect.p1.y-sampleTextHeight-3;
 
-    if self.guiObjects.outlined:GetValue() then
+    if self.gui.outlined:GetValue() then
         posY = posY-1;
     end
 
     for k=1, #flags do
         local flagString = flags[k];
 
-        if self.guiObjects.lowercase:GetValue() then
+        if self.gui.lowercase:GetValue() then
             flagString = flagString:lower()
         end
 
         dSetColor(self.flagcolors[k].r, self.flagcolors[k].g, self.flagcolors[k].b, self.flagcolors[k].a)
 
-        if self.guiObjects.outlined:GetValue() then
+        if self.gui.outlined:GetValue() then
             dTextShadow(posX, posY+(k*(sampleTextHeight+2)), flagString)
         else
             dText(posX, posY+(k*(sampleTextHeight+2)), flagString)
@@ -346,65 +450,88 @@ function BetterESP:drawFlags(rect, pEntity, callId)
     end
 end
 
+function BetterESP:doESP(pEntity, rect, index)
+
+    if self.gui.options[index].name:GetValue() then
+        self:drawName(rect, Color:New(self.gui.options[index].namecolor:GetValue()), pEntity:GetName())
+    end
+
+    if self.gui.options[index].weapon:GetValue() then
+        if self.gui.options[index].ammo:GetValue() == 2 then
+            self:drawWeaponName(rect, Color:New(self.gui.options[index].weaponcolor:GetValue()), pEntity:GetPropEntity("m_hActiveWeapon"), true)
+        else
+            self:drawWeaponName(rect, Color:New(self.gui.options[index].weaponcolor:GetValue()), pEntity:GetPropEntity("m_hActiveWeapon"), false)
+        end
+    end
+
+    if self.gui.options[index].ammo:GetValue() > 0 then
+
+        local weapon = pEntity:GetPropEntity("m_hActiveWeapon");
+        local ammo = weapon:GetPropInt("m_iClip1")
+
+        if ammo >= 0 then
+            local clipSize = self.maxAmmos[weapon:GetWeaponID()]
+
+            if clipSize then
+                if clipSize == 0 then
+                    clipSize = 1;
+                end
+
+                local percent = (ammo/clipSize) * 100;
+
+                if self.gui.options[index].ammo:GetValue() == 1 then
+                    local col = Color:New(self.gui.options[index].ammocolor1:GetValue());
+                    self:drawAmmo(rect, col, percent, ammo, clipSize, 1, index);
+                else
+                    local c1 = Color:New(self.gui.options[index].ammocolor2:GetValue());
+                    local c2 = {}
+                    c2.r, c2.g, c2.b, c2.a = self.gui.options[index].ammocolor1:GetValue()
+                    local col = c1:Inbetween(Color:New(c2.r, c2.g, c2.b, c2.a), percent/100);
+
+                    self:drawAmmo(rect, col, percent, ammo, clipSize, 2, index)
+                end
+            end
+        end
+    end
+
+    if self.gui.options[index].health:GetValue() > 0 then
+        local hp = pEntity:GetHealth()
+
+        if self.gui.options[index].health:GetValue() == 1 then
+            local col = Color:New(self.gui.options[index].healthcolor1:GetValue());
+            self:drawHealth(rect, col, hp, 1);
+        else
+            local c1 = Color:New(self.gui.options[index].healthcolor2:GetValue());
+            local c2 = {}
+            c2.r, c2.g, c2.b, c2.a = self.gui.options[index].healthcolor1:GetValue()
+            local col = c1:Inbetween(Color:New(c2.r, c2.g, c2.b, c2.a), hp/100);
+            self:drawHealth(rect, col, hp, 2);
+        end
+    end
+
+    if self.gui.options[index].flagArmor:GetValue() or self.gui.options[index].flagScoped:GetValue() then
+        self:drawFlags(rect, pEntity, index)
+    end
+
+    if self.gui.options[index].box:GetValue() then
+        self:drawBox(rect, Color:New(self.gui.options[index].boxcolor:GetValue()))
+    end
+
+end
+
 function BetterESP:doESPPlayers(pEntity, rect)
 
-    if self.variables.pLocal ~= nil then
+    if self.vars.pLocal ~= nil then
 
         if pEntity:IsPlayer() and pEntity:IsAlive() then
 
-            if pEntity:GetTeamNumber() ~= self.variables.pLocal:GetTeamNumber() then
-
+            if pEntity:GetTeamNumber() ~= self.vars.pLocal:GetTeamNumber() then
                 dSetFont(self.font);
+                self:doESP(pEntity, rect, 2)
 
-                if self.guiObjects.options[2].name:GetValue() then
-                    self:drawName(rect, Color:New(255, 255, 255, 255), pEntity:GetName())
-                end
-
-                if self.guiObjects.options[2].weapon:GetValue() then
-                    self:drawWeaponName(rect, Color:New(255, 255, 255, 255), pEntity:GetPropEntity("m_hActiveWeapon"))
-                end
-
-                if self.guiObjects.options[2].health:GetValue() then
-                    local hp = pEntity:GetHealth()
-                    local c1 = Color:New(255, 25, 25, 255);
-                    local c2 = {}
-                    c2.r, c2.g, c2.b, c2.a = self.guiObjects.options[2].healthcolor:GetValue()
-                    local col = c1:Inbetween(Color:New(c2.r, c2.g, c2.b, c2.a), hp/100);
-                    self:drawBarLeft(rect, col, hp, self.guiObjects.options[2].healthlines:GetValue());
-                end
-
-                if self.guiObjects.options[2].flagArmor:GetValue() or self.guiObjects.options[2].flagScoped:GetValue() then
-                    self:drawFlags(rect, pEntity, 2)
-                end
-
-                if self.guiObjects.options[2].box:GetValue() then
-                    self:drawBox(rect, Color:New(255, 255, 255, 255))
-                end
-
-            elseif pEntity:GetTeamNumber() == self.variables.pLocal:GetTeamNumber() and pEntity:GetIndex() ~= self.variables.pLocal:GetIndex() then
-
+            elseif pEntity:GetTeamNumber() == self.vars.pLocal:GetTeamNumber() and pEntity:GetIndex() ~= self.vars.pLocal:GetIndex() then
                 dSetFont(self.font);
-
-                if self.guiObjects.options[1].name:GetValue() then
-                    self:drawName(rect, Color:New(255, 255, 255, 255), pEntity:GetName())
-                end
-
-                if self.guiObjects.options[1].weapon:GetValue() then
-                    self:drawWeaponName(rect, Color:New(255, 255, 255, 255), pEntity:GetPropEntity("m_hActiveWeapon"))
-                end
-
-                if self.guiObjects.options[1].health:GetValue() then
-                    local hp = pEntity:GetHealth()
-                    local c1 = Color:New(255, 25, 25, 255);
-                    local c2 = {}
-                    c2.r, c2.g, c2.b, c2.a = self.guiObjects.options[1].healthcolor:GetValue()
-                    local col = c1:Inbetween(Color:New(c2.r, c2.g, c2.b, c2.a), hp/100);
-                    self:drawBarLeft(rect, col, hp, self.guiObjects.options[1].healthlines:GetValue());
-                end
-
-                if self.guiObjects.options[1].box:GetValue() then
-                    self:drawBox(rect, Color:New(255, 255, 255, 255))
-                end
+                self:doESP(pEntity, rect, 1);
             end
         end
     end
@@ -419,16 +546,16 @@ function BetterESP:hkLoad() -- ok not really callback function but idc
     --- The commented out ones are not working for whatever reason
     for i=1, 2 do
         p = i==1 and "friendly" or "enemy"
-        --setVal("esp.overlay." .. p .. ".box", 0)
+        setVal("esp.overlay." .. p .. ".box", 0)
         setVal("esp.overlay." .. p .. ".precision", 0)
-        --setVal("esp.overlay." .. p .. ".name", 0)
+        setVal("esp.overlay." .. p .. ".name", 0)
         setVal("esp.overlay." .. p .. ".skeleton", 0)
         setVal("esp.overlay." .. p .. ".glow", 0)
         setVal("esp.overlay." .. p .. ".health.healthbar", 0)
         setVal("esp.overlay." .. p .. ".health.healthnum", 0)
         setVal("esp.overlay." .. p .. ".armorbar", 0)
         setVal("esp.overlay." .. p .. ".armornum", 0)
-        --setVal("esp.overlay." .. p .. ".weapon", 0)
+        setVal("esp.overlay." .. p .. ".weapon", 0)
         setVal("esp.overlay." .. p .. ".defusing", 0)
         setVal("esp.overlay." .. p .. ".planting", 0)
         setVal("esp.overlay." .. p .. ".scoped", 0)
@@ -450,7 +577,7 @@ function BetterESP:hkUnload()
 end
 
 function BetterESP:hkDraw()
-    self.variables.pLocal = getLocal()
+    self.vars.pLocal = getLocal()
 
     if menuref:IsActive() then
         self:handleUI()

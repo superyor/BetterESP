@@ -1,2 +1,5 @@
-[2.0 Beta]
-- Recoded the entire lua.
+[2.0 Beta 2]
+- Added Health option "Number".
+- Added Ammo with options "Number" and "Bar".
+- Fixed bug with variable names.
+- Added some colors to the GUI.
